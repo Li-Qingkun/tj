@@ -74,35 +74,10 @@ function addDynamicMenuAndRoutes(username, to, from) {
     // console.log('动态菜单和路由已经存在.')
     return;
   }
-  //赋值用户权限
-  let res = store.state.app.userMenu;
-  let permsData = [];
-  for (let i = 0; i < res.length; i++) {
-    for (let j = 0; j < res[i].children.length; j++) {
-      for (let z = 0; z < res[i].children[j].children.length; z++) {
-        permsData.push(res[i].children[j].children[z].perms);
-      }
-    }
-  }
-  store.commit("setPerms", permsData);
 
-  //赋值菜单树
-  for (let i = 0; i < res.length; i++) {
-    for (let j = 0; j < res[i].children.length; j++) {
-      res[i].children[j].children = [];
-    }
-  }
-  // 添加动态路由
-  let dynamicRoutes = addDynamicRoutes(res);
-  // 处理静态组件绑定路由
-  router.options.routes[0].children = router.options.routes[0].children.concat(
-    dynamicRoutes
-  );
-  router.addRoutes(router.options.routes);
-  // 保存加载状态
-  store.commit("menuRouteLoaded", true);
-  // 保存菜单树
-  store.commit("setNavTree", res);
+  //赋值用户权限
+  let perms = store.state.user.perms;
+  store.commit("setPerms", perms);
 }
 
 /**
@@ -127,7 +102,7 @@ function handleIFrameUrl(path) {
  * @param {*} menuList 菜单列表
  * @param {*} routes 递归创建的动态(菜单)路由
  */
-function addDynamicRoutes(menuList = [], routes = []) {
+export function addDynamicRoutes(menuList = [], routes = []) {
   var temp = [];
   for (var i = 0; i < menuList.length; i++) {
     if (menuList[i].children && menuList[i].children.length >= 1) {
@@ -171,6 +146,7 @@ function addDynamicRoutes(menuList = [], routes = []) {
         } catch (e) {}
       }
       routes.push(route);
+      console.log(routes);
     }
   }
   if (temp.length >= 1) {

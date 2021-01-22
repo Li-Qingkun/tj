@@ -27,7 +27,7 @@
       </el-form>
     </div>
     <!--表格树内容栏-->
-    <el-table :data="tableTreeDdata"
+    <el-table :data="tableTreeData"
               stripe
               size="mini"
               style="width: 100%;"
@@ -82,7 +82,7 @@
                        :show-overflow-tooltip="true"
                        label="授权标识">
       </el-table-column>
-      <el-table-column prop="sort"
+      <el-table-column prop="orderNumber"
                        header-align="center"
                        align="center"
                        label="排序">
@@ -241,7 +241,7 @@ export default {
       filters: {
         name: '',
       },
-      tableTreeDdata: [],
+      tableTreeData: [],
       dialogVisible: false,
       menuTypeList: ['目录', '菜单', '按钮'],
       dataForm: {
@@ -272,17 +272,19 @@ export default {
     // 获取数据
     findTreeData: function () {
       this.loading = true
-      let res = this.$store.state.app.userMenu
-      this.tableTreeDdata = res
-      this.popupTreeData = this.getParentMenuTree(res)
+      //   let res = this.$store.state.app.userMenu
+      this.$api.menu.tree().then((res) => {
+        this.tableTreeData = res.data
+        this.popupTreeData = this.getParentMenuTree(res.data)
+      })
       this.loading = false
     },
     // 获取上级菜单树
-    getParentMenuTree: function (tableTreeDdata) {
+    getParentMenuTree: function (tableTreeData) {
       let parent = {
         parentId: 0,
         name: '顶级菜单',
-        children: tableTreeDdata,
+        children: tableTreeData,
       }
       return [parent]
     },

@@ -7,7 +7,7 @@ import axios from "../axios";
 // 保存
 export const save = data => {
   return axios({
-    url: "/user/save",
+    url: "/v1/users/insert",
     method: "post",
     data
   });
@@ -15,8 +15,15 @@ export const save = data => {
 // 删除
 export const batchDelete = data => {
   return axios({
-    url: "/user/delete",
-    method: "post",
+    url: "/v1/users/delete/" + data,
+    method: "delete"
+  });
+};
+//修改
+export const batchUpdate = data => {
+  return axios({
+    url: "/v1/users/update",
+    method: "put",
     data
   });
 };
@@ -28,28 +35,42 @@ export const findPage = data => {
     data
   });
 };
-// 导出Excel用户信息
-export const exportUserExcelFile = data => {
-  return axios({
-    url: "/user/exportUserExcelFile",
-    method: "post",
-    data
-  });
-};
+// // 导出Excel用户信息
+// export const exportUserExcelFile = data => {
+//   return axios({
+//     url: "/user/exportUserExcelFile",
+//     method: "post",
+//     data
+//   });
+// };
 
+// // 根据用户名查找
+// export const getByUserName = params => {
+//   return axios({
+//     url: "v1/users/get/username",
+//     method: "get",
+//     params
+//   });
+// };
+// 根据ID查找
+export const getById = params => {
+  return axios({
+    url: "v1/users/get/" + params,
+    method: "get"
+  });
+};
 // 根据用户名查找
-export const getByUserName = params => {
+export const checkUserName = params => {
   return axios({
-    url: "v1/users/get/username",
-    method: "get",
-    params
+    url: "v1/users/check/username/" + params,
+    method: "get"
   });
 };
-// 更新用户密码
-export const updatePassword = params => {
-  return axios({
-    url: "/user/updatePassword",
-    method: "get",
-    params
-  });
-};
+// // 更新用户密码
+// export const updatePassword = params => {
+//   return axios({
+//     url: "/user/updatePassword",
+//     method: "get",
+//     params
+//   });
+// };

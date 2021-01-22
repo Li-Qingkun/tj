@@ -29,12 +29,14 @@
     <!--表格内容栏-->
     <kt-table permsEdit="sys:role:update"
               permsDelete="sys:role:delete"
+              permsDetails="sys:role:view"
               :highlightCurrentRow="true"
               :stripe="false"
               :data="pageResult"
               :columns="columns"
               :showBatchDelete="false"
               @findPage="findPage"
+              @handleDetails="handleDetails"
               @handleEdit="handleEdit"
               @handleDelete="handleDelete">
     </kt-table>
@@ -67,30 +69,30 @@
                     auto-complete="off"
                     type="textarea"></el-input>
         </el-form-item>
-        <el-form-item label="角色菜单授权"
-                      prop="menu">
+        <el-form-item label="机构"
+                      prop="departmentName">
+          <popup-tree-input :data="deptData"
+                            :props="deptTreeProps"
+                            :prop="dataForm.departmentName"
+                            :nodeKey="''+dataForm.departmentId"
+                            :currentChangeHandle="deptTreeCurrentChangeHandle">
+          </popup-tree-input>
+        </el-form-item>
+        <el-form-item label="菜单授权"
+                      prop="menuList">
           <el-tree :data="menuData"
                    size="mini"
                    show-checkbox
                    node-key="id"
                    :props="defaultProps"
+                   :prop="dataForm.menuList"
+                   :default-checked-keys="checkKeys"
                    style="width: 100%;pading-top:20px;"
                    ref="menuTree"
                    :render-content="renderContent"
                    v-loading="menuLoading"
-                   element-loading-text="拼命加载中"
-                   :check-strictly="true"
-                   @check-change="handleMenuCheckChange">
+                   element-loading-text="拼命加载中">
           </el-tree>
-        </el-form-item>
-        <el-form-item label="所属部门"
-                      prop="departmentName">
-          <popup-tree-input :data="popupTreeData"
-                            :props="popupTreeProps"
-                            :prop="dataForm.parentName==null?'顶级菜单':dataForm.parentName"
-                            :nodeKey="''+dataForm.parentId"
-                            :currentChangeHandle="handleTreeSelectChange">
-          </popup-tree-input>
         </el-form-item>
       </el-form>
       <div slot="footer"
@@ -103,54 +105,69 @@
                    :loading="editLoading">{{$t('action.submit')}}</el-button>
       </div>
     </el-dialog>
-    <!--角色菜单，表格树内容栏-->
-    <!-- <div class="menu-container"
-         :v-if="true">
-      <div class="menu-header">
-        <span><B>角色菜单授权</B></span>
+    <!--详情界面-->
+    <el-dialog :title="'详情'"
+               width="40%"
+               :visible.sync="detailsVisible"
+               :close-on-click-modal="false">
+      <table class="tab-details"
+             :model="dataTable"
+             label-width="80px"
+             :rules="dataFormRules"
+             ref="dataTable"
+             :size="size">
+        <tr>
+          <th>角色名</th>
+          <td> {{dataTable.name}} </td>
+        </tr>
+        <tr>
+          <th>备注</th>
+          <td>{{dataTable.remark}}</td>
+        </tr>
+        <tr>
+          <th>所属部门</th>
+          <td>{{dataTable.departmentName}}</td>
+        </tr>
+        <!-- <tr>
+          <th>授权菜单</th>
+          <td>{{dataTable.menuList}}</td>
+        </tr> -->
+        <tr>
+          <th>授权菜单</th>
+          <td>
+            <el-tree :data="menuDataDetail"
+                     size="mini"
+                     node-key="id"
+                     :props="defaultProps"
+                     :prop="dataForm.menuList"
+                     :default-checked-keys="checkKeys"
+                     style="width: 100%;pading-top:20px;"
+                     ref="menuTree"
+                     :render-content="renderContent"
+                     v-loading="menuLoading"
+                     element-loading-text="拼命加载中">
+            </el-tree>
+          </td>
+        </tr>
+      </table>
+      <div slot="footer"
+           class="dialog-footer">
+        <el-button :size="size"
+                   @click.native="detailsVisible = false">关闭</el-button>
       </div>
-      <el-tree :data="menuData"
-               size="mini"
-               show-checkbox
-               node-key="id"
-               :props="defaultProps"
-               style="width: 100%;pading-top:20px;"
-               ref="menuTree"
-               :render-content="renderContent"
-               v-loading="menuLoading"
-               element-loading-text="拼命加载中"
-               :check-strictly="true"
-               @check-change="handleMenuCheckChange">
-      </el-tree>
-      <div style="float:left;padding-left:24px;padding-top:12px;padding-bottom:4px;">
-        <el-checkbox v-model="checkAll"
-                     @change="handleCheckAll"
-                     :disabled="this.selectRole.id == null"><b>全选</b></el-checkbox>
-      </div>
-      <div style="float:right;padding-right:15px;padding-top:4px;padding-bottom:4px;">
-        <kt-button label="重置"
-                   perms="sys:role:update"
-                   type="primary"
-                   @click="resetSelection"
-                   :disabled="this.selectRole.id == null" />
-        <kt-button label="提交"
-                   perms="sys:role:update"
-                   type="primary"
-                   @click="submitAuthForm"
-                   :disabled="this.selectRole.id == null"
-                   :loading="authLoading" />
-      </div>
-    </div> -->
+    </el-dialog>
   </div>
 </template>
 
 <script>
+import PopupTreeInput from '@/components/PopupTreeInput'
 import KtTable from '@/views/Core/KtTable'
 import KtButton from '@/views/Core/KtButton'
 import TableTreeColumn from '@/views/Core/TableTreeColumn'
 import { formatTime } from '@/utils/datetime'
 export default {
   components: {
+    PopupTreeInput,
     KtTable,
     KtButton,
     TableTreeColumn,
@@ -172,17 +189,30 @@ export default {
       operation: false, // true:新增, false:编辑
       dialogVisible: false, // 新增编辑界面是否显示
       editLoading: false,
+      detailsVisible: false, //显示详情页面
+      dataTable: {}, //详情页数据
       dataFormRules: {
         name: [{ required: true, message: '请输入角色名', trigger: 'blur' }],
+        departmentName: [
+          { required: true, message: '请选择部门', trigger: 'blur' },
+        ],
       },
       // 新增编辑界面数据
       dataForm: {
         id: 0,
         name: '',
+        departmentId: 1,
+        departmentName: '',
+        menuIds: '',
         remark: '',
+      },
+      dataMenu: {
+        parentId: 0,
+        parentName: '',
       },
       selectRole: {},
       menuData: [],
+      menuDataDetail: [], //详情页菜单树
       menuSelections: [],
       menuLoading: false,
       authLoading: false,
@@ -192,11 +222,14 @@ export default {
         children: 'children',
         label: 'name',
       },
-      popupTreeData: [],
-      popupTreeProps: {
+      tableTreeData: [],
+      deptData: [],
+      deptTreeProps: {
         label: 'name',
         children: 'children',
       },
+      menuIdsList: [],
+      checkKeys: [], //菜单默认选中的
     }
   },
   methods: {
@@ -216,7 +249,7 @@ export default {
     },
     // 批量删除
     handleDelete: function (data) {
-      this.$api.role.batchDelete(data.params).then(data.callback)
+      this.$api.role.batchDelete(data.ids).then(data.callback)
     },
     // 显示新增界面
     handleAdd: function () {
@@ -225,22 +258,82 @@ export default {
       this.dataForm = {
         id: 0,
         name: '',
+        departmentId: 1,
+        departmentName: '',
+        menuIds: '',
         remark: '',
+      }
+      this.dataMenu = {
+        parentId: 0,
+        parentName: '',
       }
     },
     // 显示编辑界面
     handleEdit: function (params) {
       this.dialogVisible = true
       this.operation = false
-      this.dataForm = Object.assign({}, params.row)
+      this.$nextTick(() => {
+        this.$refs.menuTree.setCheckedKeys([])
+      })
+      this.$api.role.findById(params.row.id).then((res) => {
+        this.dataForm = Object.assign({}, res.data)
+        this.checkKeys = []
+        for (let i in res.data.menuList) {
+          for (let j in res.data.menuList) {
+            if (res.data.menuList[i].id === res.data.menuList[j].parentId) {
+              res.data.menuList[j].parentName = res.data.menuList[i].name
+              res.data.menuList[i].children.push(res.data.menuList[j])
+            }
+          }
+        }
+        for (let i = 0; i < res.data.menuList.length; i++) {
+          if (res.data.menuList[i].children.length === 0) {
+            this.checkKeys.push(res.data.menuList[i].id)
+          }
+        }
+      })
+    },
+    //显示详情页面
+    handleDetails: function (params) {
+      this.detailsVisible = true
+      this.$api.role.findById(params.row.id).then((res) => {
+        if (res.code == 200) {
+          this.menuDataDetail = []
+          for (let i in res.data.menuList) {
+            for (let j in res.data.menuList) {
+              if (res.data.menuList[i].id === res.data.menuList[j].parentId) {
+                res.data.menuList[j].parentName = res.data.menuList[i].name
+                res.data.menuList[i].children.push(res.data.menuList[j])
+              }
+            }
+            if (res.data.menuList[i].parentId === null) {
+              this.menuDataDetail.push(res.data.menuList[i])
+            }
+          }
+          this.dataTable = Object.assign({}, res.data)
+        } else {
+          this.$message({
+            message: res.message,
+            type: 'error',
+            duration: 10000,
+            showClose: true,
+          })
+        }
+      })
     },
     // 编辑
     submitForm: function () {
       this.$refs.dataForm.validate((valid) => {
         if (valid) {
-          //   console.log(operation)
           this.$confirm('确认提交吗？', '提示', {}).then(() => {
             this.editLoading = true
+            let menu = this.$refs.menuTree.getCheckedNodes(false, true)
+            let menuIds = ''
+            for (let i = 0; i < menu.length; i++) {
+              menuIds += menu[i].id + ','
+            }
+            menuIds = menuIds.slice(0, menuIds.length - 1)
+            this.dataForm.menuIds = menuIds
             let params = Object.assign({}, this.dataForm)
             if (this.operation) {
               this.$api.role.save(params).then((res) => {
@@ -279,96 +372,21 @@ export default {
     // 获取数据
     findTreeData: function () {
       this.menuLoading = true
-      this.menuData = this.$store.state.app.userMenu
-      this.$api.dept.findDeptTree().then((res) => {
-        this.tableTreeDdata = res
-        this.popupTreeData = this.getParentMenuTree(res)
-        this.loading = false
+      this.$api.menu.tree().then((res) => {
+        this.menuData = res.data
       })
       this.menuLoading = false
     },
-    // // 获取数据
-    // findTreeData: function () {
-    //   this.loading = true
-    // },
-    // 获取上级机构树
-    getParentMenuTree: function (tableTreeData) {
-      let parent = {
-        parentId: 0,
-        name: '顶级菜单',
-        children: tableTreeData,
-      }
-      return [parent]
-    },
-    // 机构树选中
-    handleTreeSelectChange(data, node) {
-      this.dataForm.parentId = data.id
-      this.dataForm.parentName = data.name
-    },
-    // 树节点选择监听
-    handleMenuCheckChange(data, check, subCheck) {
-      if (check) {
-        // 节点选中时同步选中父节点
-        let parentId = data.parentId
-        this.$refs.menuTree.setChecked(parentId, true, false)
-      } else {
-        // 节点取消选中时同步取消选中子节点
-        if (data.children != null) {
-          data.children.forEach((element) => {
-            this.$refs.menuTree.setChecked(element.id, false, false)
-          })
-        }
-      }
-    },
-    // 重置选择
-    resetSelection() {
-      this.checkAll = false
-      this.$refs.menuTree.setCheckedNodes(this.currentRoleMenus)
-    },
-    // 全选操作
-    handleCheckAll() {
-      if (this.checkAll) {
-        let allMenus = []
-        this.checkAllMenu(this.menuData, allMenus)
-        this.$refs.menuTree.setCheckedNodes(allMenus)
-      } else {
-        this.$refs.menuTree.setCheckedNodes([])
-      }
-    },
-    // 递归全选
-    checkAllMenu(menuData, allMenus) {
-      menuData.forEach((menu) => {
-        allMenus.push(menu)
-        if (menu.children) {
-          this.checkAllMenu(menu.children, allMenus)
-        }
+    // 获取部门列表
+    findDeptTree: function () {
+      this.$api.dept.findDeptTree().then((res) => {
+        this.deptData = res.data
       })
     },
-    // 角色菜单授权提交
-    submitAuthForm() {
-      let roleId = this.selectRole.id
-      if ('admin' == this.selectRole.name) {
-        this.$message({
-          message: '超级管理员拥有所有菜单权限，不允许修改！',
-          type: 'error',
-        })
-        return
-      }
-      this.authLoading = true
-      let checkedNodes = this.$refs.menuTree.getCheckedNodes(false, true)
-      let roleMenus = []
-      for (let i = 0, len = checkedNodes.length; i < len; i++) {
-        let roleMenu = { roleId: roleId, menuId: checkedNodes[i].id }
-        roleMenus.push(roleMenu)
-      }
-      this.$api.role.saveRoleMenus(roleMenus).then((res) => {
-        if (res.code == 200) {
-          this.$message({ message: '操作成功', type: 'success' })
-        } else {
-          this.$message({ message: '操作失败, ' + res.msg, type: 'error' })
-        }
-        this.authLoading = false
-      })
+    // 机构菜单树选中
+    deptTreeCurrentChangeHandle(data, node) {
+      this.dataForm.departmentId = data.id
+      this.dataForm.departmentName = data.name
     },
     renderContent(h, { node, data, store }) {
       return (
@@ -382,16 +400,6 @@ export default {
               {data.type === 0 ? '目录' : data.type === 1 ? '菜单' : '按钮'}
             </el-tag>
           </span>
-          <span style="text-algin:center;margin-right:80px;">
-            {' '}
-            <i class={data.icon}></i>
-          </span>
-          <span style="text-algin:center;margin-right:80px;">
-            {data.parentName ? data.parentName : '顶级菜单'}
-          </span>
-          <span style="text-algin:center;margin-right:80px;">
-            {data.url ? data.url : '\t'}
-          </span>
         </div>
       )
     },
@@ -400,7 +408,9 @@ export default {
       return format(row[column.property])
     },
   },
-  mounted() {},
+  mounted() {
+    this.findDeptTree()
+  },
 }
 </script>
 <style scoped>
@@ -413,5 +423,16 @@ export default {
   text-align: left;
   font-size: 16px;
   color: rgb(20, 89, 121);
+}
+.tab-details th {
+  height: 30px;
+  width: 130px;
+  vertical-align: top;
+  text-align: right;
+  padding-top: 10px;
+}
+.tab-details td {
+  text-align: left;
+  padding: 10px 0 10px 30px;
 }
 </style>

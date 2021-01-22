@@ -115,34 +115,30 @@ export default {
             //将返回的用户信息拆分，获取菜单列信息
             let menu = []
             let menulist = res.data.roleList[0].menuList
-            for (let i = 0; i < menulist.length; i++) {
-              //   const element = res.data.roleList[0].menuList[i]
-              if (menulist[i].type === 0) {
+            for (let i in menulist) {
+              for (let j in menulist) {
+                if (menulist[j].type != 2) {
+                  if (menulist[i].id === menulist[j].parentId) {
+                    menulist[j].parentName = menulist[i].name
+                    menulist[i].children.push(menulist[j])
+                  }
+                }
+              }
+              if (menulist[i].parentId === null) {
                 menu.push(menulist[i])
               }
             }
-            for (let i = 0; i < menulist.length; i++) {
-              if (menulist[i].type === 1) {
-                for (let j = 0; j < menu.length; j++) {
-                  if (menu[j].id === menulist[i].parentId) {
-                    menu[j].children.push(menulist[i])
-                  }
-                }
-              }
-            }
+            //赋值用户权限菜单树信息
+            this.$store.commit('setUserMenu', menu)
+            this.$store.commit('setNavTree', menu)
+            //赋值用户权限信息
+            let permsData = []
             for (let i = 0; i < menulist.length; i++) {
               if (menulist[i].type === 2) {
-                for (let j = 0; j < menu.length; j++) {
-                  for (let z = 0; z < menu[j].children.length; z++) {
-                    if (menu[j].children[z].id === menulist[i].parentId) {
-                      menu[j].children[z].children.push(menulist[i])
-                    }
-                  }
-                }
+                permsData.push(menulist[i].perms)
               }
             }
-            //赋值用户权限菜单
-            this.$store.commit('setUserMenu', menu)
+            this.$store.commit('setPerms', permsData)
           }
         })
         .catch((res) => {

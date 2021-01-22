@@ -6,7 +6,7 @@
       <el-form :inline="true"
                :model="filters"
                :size="size">
-        <el-form-item>
+        <!-- <el-form-item>
           <el-input v-model="filters.name"
                     placeholder="名称"></el-input>
         </el-form-item>
@@ -16,7 +16,7 @@
                      perms="sys:department:view"
                      type="primary"
                      @click="findTreeData(null)" />
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item>
           <kt-button icon="fa fa-plus"
                      label="新增"
@@ -27,19 +27,13 @@
       </el-form>
     </div>
     <!--表格树内容栏-->
-    <el-table :data="tableTreeDdata"
+    <el-table :data="tableTreeData"
               stripe
               size="mini"
               style="width: 100%;"
               v-loading="loading"
               rowKey="id"
               element-loading-text="拼命加载中">
-      <!-- <el-table-column prop="id"
-                       header-align="center"
-                       align="center"
-                       width="80"
-                       label="ID">
-      </el-table-column> -->
       <table-tree-column prop="name"
                          header-align="center"
                          treeKey="id"
@@ -57,11 +51,6 @@
                        align="center"
                        label="排序">
       </el-table-column>
-      <!-- <el-table-column prop="createBy"
-                       header-align="center"
-                       align="center"
-                       label="创建人">
-      </el-table-column> -->
       <el-table-column prop="createTime"
                        header-align="center"
                        align="center"
@@ -153,7 +142,7 @@ export default {
       filters: {
         name: '',
       },
-      tableTreeDdata: [],
+      tableTreeData: [],
       dialogVisible: false,
       dataForm: {
         id: 0,
@@ -182,17 +171,17 @@ export default {
     findTreeData: function () {
       this.loading = true
       this.$api.dept.findDeptTree().then((res) => {
-        this.tableTreeDdata = res.data
+        this.tableTreeData = res.data
         this.popupTreeData = this.getParentMenuTree(res.data)
         this.loading = false
       })
     },
     // 获取上级机构树
-    getParentMenuTree: function (tableTreeDdata) {
+    getParentMenuTree: function (tableTreeData) {
       let parent = {
         parentId: 0,
         name: '顶级菜单',
-        children: tableTreeDdata,
+        children: tableTreeData,
       }
       return [parent]
     },

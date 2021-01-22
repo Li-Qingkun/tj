@@ -1,11 +1,19 @@
 <template>
-  <div id="main-container" class="main-container" :class="$store.state.app.collapse?'position-collapse-left':'position-left'">
+  <div id="main-container"
+       class="main-container"
+       :class="$store.state.app.collapse?'position-collapse-left':'position-left'">
     <!-- 标签页 -->
     <div class="tab-container">
-      <el-tabs class="tabs" :class="$store.state.app.collapse?'position-collapse-left':'position-left'"
-        v-model="mainTabsActiveName" :closable="true" type="card"
-        @tab-click="selectedTabHandle" @tab-remove="removeTabHandle">
-        <el-dropdown class="tabs-tools" :show-timeout="0" trigger="hover">
+      <el-tabs class="tabs"
+               :class="$store.state.app.collapse?'position-collapse-left':'position-left'"
+               v-model="mainTabsActiveName"
+               :closable="true"
+               type="card"
+               @tab-click="selectedTabHandle"
+               @tab-remove="removeTabHandle">
+        <el-dropdown class="tabs-tools"
+                     :show-timeout="0"
+                     trigger="hover">
           <div style="font-size:20px;width:50px;"><i class="el-icon-arrow-down"></i></div>
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item @click.native="tabsCloseCurrentHandle">关闭当前标签</el-dropdown-item>
@@ -15,7 +23,9 @@
           </el-dropdown-menu>
         </el-dropdown>
         <el-tab-pane v-for="item in mainTabs"
-          :key="item.name" :label="item.title" :name="item.name">
+                     :key="item.name"
+                     :label="item.title"
+                     :name="item.name">
           <span slot="label"><i :class="item.icon"></i> {{item.title}} </span>
         </el-tab-pane>
       </el-tabs>
@@ -23,8 +33,9 @@
     <!-- 主内容区域 -->
     <div class="main-content">
       <keep-alive>
-        <transition name="fade" mode="out-in">
-            <router-view></router-view>
+        <transition name="fade"
+                    mode="out-in">
+          <router-view></router-view>
         </transition>
       </keep-alive>
     </div>
@@ -33,64 +44,76 @@
 
 <script>
 export default {
-  data () {
-    return {
-    }
+  data() {
+    return {}
   },
   computed: {
     mainTabs: {
-      get () { return this.$store.state.tab.mainTabs },
-      set (val) { this.$store.commit('updateMainTabs', val) }
+      get() {
+        return this.$store.state.tab.mainTabs
+      },
+      set(val) {
+        this.$store.commit('updateMainTabs', val)
+      },
     },
     mainTabsActiveName: {
-      get () { return this.$store.state.tab.mainTabsActiveName },
-      set (val) { this.$store.commit('updateMainTabsActiveName', val) }
-    }
+      get() {
+        return this.$store.state.tab.mainTabsActiveName
+      },
+      set(val) {
+        this.$store.commit('updateMainTabsActiveName', val)
+      },
+    },
   },
   methods: {
     // tabs, 选中tab
-    selectedTabHandle (tab) {
-      tab = this.mainTabs.filter(item => item.name === tab.name)
+    selectedTabHandle(tab) {
+      tab = this.mainTabs.filter((item) => item.name === tab.name)
       if (tab.length >= 1) {
         this.$router.push({ name: tab[0].name })
       }
     },
     // tabs, 删除tab
-    removeTabHandle (tabName) {
-      this.mainTabs = this.mainTabs.filter(item => item.name !== tabName)
+    removeTabHandle(tabName) {
+      this.mainTabs = this.mainTabs.filter((item) => item.name !== tabName)
       if (this.mainTabs.length >= 1) {
         // 当前选中tab被删除
         if (tabName === this.mainTabsActiveName) {
-          this.$router.push({ name: this.mainTabs[this.mainTabs.length - 1].name }, () => {
-            this.mainTabsActiveName = this.$route.name
-          })
+          this.$router.push(
+            { name: this.mainTabs[this.mainTabs.length - 1].name },
+            () => {
+              this.mainTabsActiveName = this.$route.name
+            }
+          )
         }
       } else {
-        this.$router.push("/")
+        this.$router.push('/')
       }
     },
     // tabs, 关闭当前
-    tabsCloseCurrentHandle () {
+    tabsCloseCurrentHandle() {
       this.removeTabHandle(this.mainTabsActiveName)
     },
     // tabs, 关闭其它
-    tabsCloseOtherHandle () {
-      this.mainTabs = this.mainTabs.filter(item => item.name === this.mainTabsActiveName)
+    tabsCloseOtherHandle() {
+      this.mainTabs = this.mainTabs.filter(
+        (item) => item.name === this.mainTabsActiveName
+      )
     },
     // tabs, 关闭全部
-    tabsCloseAllHandle () {
+    tabsCloseAllHandle() {
       this.mainTabs = []
-      this.$router.push("/")
+      this.$router.push('/')
     },
     // tabs, 刷新当前
-    tabsRefreshCurrentHandle () {
+    tabsRefreshCurrentHandle() {
       var tempTabName = this.mainTabsActiveName
       this.removeTabHandle(tempTabName)
       this.$nextTick(() => {
         this.$router.push({ name: tempTabName })
       })
-    }
-  }
+    },
+  },
 }
 </script>
 
@@ -120,7 +143,7 @@ export default {
     border-bottom-width: 1px;
     border-bottom-style: solid;
   }
- .tabs-tools {
+  .tabs-tools {
     position: fixed;
     top: 60px;
     right: 0;

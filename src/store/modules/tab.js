@@ -3,14 +3,14 @@ export default {
     // 主入口标签页
     mainTabs: [],
     // 当前标签页名
-    mainTabsActiveName: ''
+    mainTabsActiveName: ""
   },
   mutations: {
-    updateMainTabs (state, tabs) {
-      state.mainTabs = tabs
+    updateMainTabs(state, tabs) {
+      state.mainTabs = tabs;
     },
-    updateMainTabsActiveName (state, name) {
-      state.mainTabsActiveName = name
+    updateMainTabsActiveName(state, name) {
+      state.mainTabsActiveName = name;
     }
   }
-}
+};

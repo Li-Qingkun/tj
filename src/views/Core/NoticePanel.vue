@@ -2,13 +2,15 @@
   <div class="notice-panel">
     <div class="header">您有 {{data.length}} 条通知</div>
     <div class="notice-content">
-      <div v-for="item in data" :key="item.key" class="notice-item">
+      <div v-for="item in data"
+           :key="item.key"
+           class="notice-item">
         <span class="notice-icon">
           <li :class="item.icon"></li>
-        </span>  
+        </span>
         <span class="notice-cotent">
           {{ item.content }}
-        </span>  
+        </span>
       </div>
     </div>
     <div class="notice-footer">查看所有通知</div>
@@ -23,39 +25,38 @@ export default {
       type: Array,
       default: () => [
         {
-          key: "1",
-          icon:'fa fa-envelope-o',
-          content:'你修改了用户密码'
+          key: '1',
+          icon: 'fa fa-envelope-o',
+          content: '你修改了用户密码',
         },
         {
-          key: "2",
-          icon:'fa fa-music',
-          content:'你修改了用户头像'
+          key: '2',
+          icon: 'fa fa-music',
+          content: '你修改了用户头像',
         },
         {
-          key: "3",
-          icon:'fa fa-edit',
-          content:'今日25名新成员加入'
+          key: '3',
+          icon: 'fa fa-edit',
+          content: '今日25名新成员加入',
         },
         {
-          key: "4",
-          icon:'fa fa-edit',
-          content:'您发表了一篇新随笔'
-        }]
-    }
+          key: '4',
+          icon: 'fa fa-edit',
+          content: '您发表了一篇新随笔',
+        },
+      ],
+    },
   },
   data() {
-    return {
-    }
+    return {}
   },
   methods: {
     handleClick: function () {
       // 按钮操作处理函数
       this.$emit('click', {})
-    }
+    },
   },
-  mounted() {
-  }
+  mounted() {},
 }
 </script>
 
@@ -100,6 +101,6 @@ export default {
 }
 .notice-footer:hover {
   cursor: pointer;
-  background: #b1a6a61e
+  background: #b1a6a61e;
 }
 </style>

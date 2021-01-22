@@ -8,7 +8,7 @@ export default {
     districts: [], // 行政区划
     districtsTree: [], // 行政区划树
     user: {}, //登录后的用户信息
-    userMenu: []
+    userMenu: [] //用户的权限菜单树信息
   },
   getters: {
     collapse(state) {
